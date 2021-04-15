@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <springProperty scope="context" name="APP_NAME" source="spring.application.name"/>
+
+    <!-- 日志的存放路径：默认日志输出在当前项目下，如运行在 Tomcat 中日志会输出至 tomcat/logs/ 目录下 -->
+    <property name="LOG_HOME" value="${catalina.base:-.}/logs"/>
+    <!-- 日志文件大小，超过这个大小将被压缩 -->
+    <property name="LOG_MAX_SIZE" value="100MB"/>
+    <!-- 日志输出格式 -->
+    <property name="LOG_COMMON_PATTERN" value="%date ${APP_NAME} %level [%thread] %C: %msg%n"/>
+    <property name="LOG_DEV_PATTERN"
+              value="%d{ISO8601} %green(${APP_NAME}) %highlight(%-5level) [%thread] %cyan(%-40.40logger{39}): %msg%n"/>
+    <property name="LOG_PROD_PATTERN" value="%d{ISO8601} ${APP_NAME} %-5level [%thread] %-40.40logger{39}: %msg%n"/>
+    <!-- APP Package 前缀：com.ems -->
+    <property name="APP_PACKAGE" value="com.ems"/>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <springProfile name="dev">
+                DEBUG
+            </springProfile>
+            <springProfile name="prod">
+                INFO
+            </springProfile>
+            <springProfile name="pre">
+                INFO
+            </springProfile>
+            <springProfile name="preTest">
+                INFO
+            </springProfile>
+        </filter>
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>
+                ${LOG_PROD_PATTERN}
+            </Pattern>
+        </layout>
+    </appender>
+
+    <!-- 异常日志，包括 WARN 和 ERROR -->
+    <appender name="FILE_EXCEPTION" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>WARN</level>
+        </filter>
+        <file>${LOG_HOME}/${APP_NAME}_error.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- rollover daily -->
+            <fileNamePattern>${LOG_HOME}/error/${APP_NAME}_error_%d{yyyy-MM-dd}_%i.log.gz</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <TimeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <!-- or whenever the file size reaches 100MB -->
+                <MaxFileSize>${LOG_MAX_SIZE}</MaxFileSize>
+            </TimeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${LOG_COMMON_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- INFO 日志 -->
+    <appender name="FILE_INFO" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+        <file>${LOG_HOME}/${APP_NAME}_info.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/info/${APP_NAME}_info_%d{yyyy-MM-dd}_%i.log.gz</fileNamePattern>
+            <maxHistory>15</maxHistory>
+            <TimeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <MaxFileSize>${LOG_MAX_SIZE}</MaxFileSize>
+            </TimeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${LOG_COMMON_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- DEBUG 日志 -->
+    <springProfile name="dev">
+        <appender name="FILE_DEBUG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                <level>DEBUG</level>
+            </filter>
+            <file>${LOG_HOME}/${APP_NAME}_debug.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_HOME}/debug/${APP_NAME}_debug_%d{yyyy-MM-dd}_%i.log.zip</fileNamePattern>
+                <maxHistory>15</maxHistory>
+                <TimeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                    <MaxFileSize>${LOG_MAX_SIZE}</MaxFileSize>
+                </TimeBasedFileNamingAndTriggeringPolicy>
+            </rollingPolicy>
+            <encoder>
+                <pattern>${LOG_COMMON_PATTERN}</pattern>
+            </encoder>
+        </appender>
+    </springProfile>
+
+    <!-- TRACE 日志 -->
+    <springProfile name="dev">
+        <appender name="FILE_TRACE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOG_HOME}/${APP_NAME}_trace.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_HOME}/trace/${APP_NAME}_trace_%d{yyyy-MM-dd}_%i.log.gz</fileNamePattern>
+                <maxHistory>10</maxHistory>
+                <TimeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                    <MaxFileSize>${LOG_MAX_SIZE}</MaxFileSize>
+                </TimeBasedFileNamingAndTriggeringPolicy>
+            </rollingPolicy>
+            <encoder>
+                <pattern>${LOG_COMMON_PATTERN}</pattern>
+            </encoder>
+        </appender>
+    </springProfile>
+
+    <logger name="org.springframework" level="WARN"/>
+
+    <!--<springProfile name="dev">-->
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+    </root>
+    <!--</springProfile>-->
+
+    <springProfile name="prod">
+        <root level="INFO">
+            <appender-ref ref="FILE_EXCEPTION"/>
+            <appender-ref ref="FILE_INFO"/>
+            <appender-ref ref="STDOUT"/>
+        </root>
+    </springProfile>
+
+</configuration>
