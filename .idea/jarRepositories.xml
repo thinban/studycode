@@ -14,6 +14,11 @@
     <remote-repository>
       <option name="id" value="releases" />
       <option name="name" value="local private nexus" />
+      <option name="url" value="http://172.28.1.83/nexus/repository/ems_release" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="releases" />
+      <option name="name" value="local private nexus" />
       <option name="url" value="http://10.201.27.183:8081/repository/ems_release" />
     </remote-repository>
     <remote-repository>
